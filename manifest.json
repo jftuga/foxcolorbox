@@ -1,0 +1,27 @@
+{
+    "description": "Customize Browser Window Colors",
+    "manifest_version": 2,
+    "version": "1.0",
+    "name": "FoxColorFlow",
+    "homepage_url": "https://github.com/jftuga/foxcolorflow",
+    "icons": {
+        "128": "foxcolorflow-128.ico"
+    },
+    "browser_action": {
+        "default_icon": {
+            "128": "foxcolorflow-128.ico"
+        },
+        "default_title": "Fox Color Flow",
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "scripts": [
+            "popup.js"
+        ]
+    },
+    "permissions": [
+        "tabs",
+        "theme",
+        "activeTab"
+    ]
+}
