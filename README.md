@@ -17,3 +17,6 @@ Firefox extension download: TBD
 ## Acknowledgements
 * This extension was inspired by the [Colorful Windows](https://github.com/DaveDuck321/Colorful-window-theme) extension.
 
+## Disclosure Notification
+
+This program was completely developed on my own personal time, for my own personal benefit, and on my personally owned equipment.
