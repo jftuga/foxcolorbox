@@ -31,8 +31,7 @@ function getOldestColorTheme() {
 
 function appendButton(elementId, color) {
     var b = document.createElement("button");
-    b.data = color;
-    b.innerHTML = color;
+    b.innerText = color;
     b.style.background = color;
     b.style.width = "100px";
 
