@@ -6,7 +6,7 @@ clicking on the extension icon:
 
 ![fox color flow](foxcolorflow.png)
 
-Firefox extension download: TBD
+Firefox extension download: https://addons.mozilla.org/en-US/firefox/addon/foxcolorflow/
 
 ### Demo
 
