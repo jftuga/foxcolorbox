@@ -1,4 +1,4 @@
-# Fox Color Flow
+# Fox Color Box
 
 This is a Firefox extension that allows you to change and customize browser Window colors.
 When you open a new window, it will have a distinct color.  You can also change colors by
@@ -6,7 +6,7 @@ clicking on the extension icon:
 
 ![fox color flow](foxcolorflow.png)
 
-Firefox extension download: https://addons.mozilla.org/en-US/firefox/addon/foxcolorflow/
+Firefox extension download: https://addons.mozilla.org/en-US/firefox/addon/foxcolorbox/
 
 ### Demo
 
