@@ -2,10 +2,12 @@
 // -John Taylor
 // 2023-11-14
 
+console.log("In foxcolorbox popup.js");
+
 // https://htmlcolorcodes.com/color-names/
-var all_colors = ["IndianRed", "DarkRed", "PaleVioletRed", "LightSalmon", "PeachPuff", "DarkKhaki", "Plum",
-    "MediumPurple", "LightGreen", "DarkCyan", "Turquoise", "DeepSkyBlue", "Wheat", "Peru",
-    "DarkGray", "SlateGray"];
+var all_colors = ["LightCoral", "LightSalmon", "LightPink", "LightSalmon", "PeachPuff", "Khaki", "Thistle",
+    "Violet", "LightGreen", "YellowGreen", "Turquoise", "LightSkyBlue", "Wheat", "Peru",
+    "LightGray", "DarkGray"];
 
 // an array of TimedColor objects
 var all_timed_colors = [];
@@ -18,6 +20,7 @@ class TimedColor {
     }
 }
 
+// keep a history of what time the last color was used and then select the LRU color
 function getOldestColorTheme() {
     console.log("NEW WINDOW  : ", all_timed_colors[0], 0);
     theme = { colors: { frame: all_timed_colors[0].color, tab_background_text: '#000' } };
@@ -29,6 +32,7 @@ function getOldestColorTheme() {
     return theme;
 }
 
+// adds a new, colored button to the button_list div
 function appendButton(elementId, color) {
     var b = document.createElement("button");
     b.innerText = color;
@@ -39,7 +43,7 @@ function appendButton(elementId, color) {
         document.getElementById(elementId).appendChild(b);
         document.getElementById(elementId).appendChild(document.createElement("br"));
     } catch (error) {
-        // page is not fully loaded yet
+        // ignore b/c called from background scripts; not clicking on extension icon
         return;
     }
 
@@ -64,23 +68,75 @@ function appendButton(elementId, color) {
     }
 }
 
+// when a new window is created, such as pressing ctrl-n or dragging a tab to the desktop,
+// change the color of the when if the "change color for new windows" checkbox is checked
+// if extension has not run before, create local storage key: change_new
 async function applyWindowTheme() {
-    let current_window = await browser.windows.getCurrent();
-    browser.theme.update(current_window.id, getOldestColorTheme());
+    console.log("A new window was created:", window);
+    x = browser.storage.local.get();
+    x.then(async obj => {
+        console.log("obj:", obj);
+        has_cn_storage_key = false;
+        if (obj.hasOwnProperty("change_new") === false) {
+            console.log("Adding change_new key to local storage");
+            has_cn_storage_key = true;
+            browser.storage.local.set({ "change_new": true });
+            console.log("[storage save] setting change_new: true");
+        }
+        if (obj["change_new"] === true || has_cn_storage_key === true) {
+            let current_window = await browser.windows.getCurrent();
+            browser.theme.update(current_window.id, getOldestColorTheme());
+        }
+    });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+// fired when user clicks the extension's icon
+window.addEventListener("load", function () { // DOMContentLoaded
+    let now = new Date();
+    // console.log("starting on:", now.toISOString());
+    // console.log("document.readyState: ", document.readyState);
+
     try {
         reset.addEventListener("click", async function () {
             let current_window = await browser.windows.getCurrent();
             browser.theme.reset(current_window.id);
         });
     } catch (error) {
-        // page is not fully loaded yet
+        // ignore b/c called from background scripts; not clicking on extension icon
     }
 
     all_colors.forEach((color) => all_timed_colors.push(new TimedColor(color)));
     all_colors.forEach((color) => appendButton("button_list", color));
-});
 
+
+    try {
+        console.log("is checked? ", document.getElementById("change_new").checked);
+        x = browser.storage.local.get();
+        x.then(obj => {
+            console.log("change_new => obj:", obj["change_new"])
+            if (obj["change_new"] === false) {
+                console.log("unchecking: ", document.getElementById("change_new"));
+                document.getElementById("change_new").checked = false;
+            }
+        });
+
+        var change_new_selector = document.getElementById("change_new");
+        change_new_selector.addEventListener('change', function () {
+            if (this.checked) {
+                browser.storage.local.set({ "change_new": true });
+                document.getElementById("change_new").checked = true;
+                console.log("[storage save] setting change_new: true");
+            } else {
+                browser.storage.local.set({ "change_new": false })
+                document.getElementById("change_new").checked = false;
+                console.log("[storage save] setting change_new: false");
+            }
+        });
+    } catch (error) {
+        // ignore b/c called from background scripts; not by clicking on extension icon
+    }
+
+}); // window.addEventListener
+
+// occurs when a new browser window is created
 browser.windows.onCreated.addListener(applyWindowTheme);
