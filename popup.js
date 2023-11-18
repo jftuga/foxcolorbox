@@ -12,6 +12,7 @@ var all_colors = ["LightCoral", "LightSalmon", "LightPink", "LightSalmon", "Peac
 // an array of TimedColor objects
 var all_timed_colors = [];
 
+// each color has an associated time that is was last used
 class TimedColor {
     constructor(color) {
         this.color = color;
@@ -69,8 +70,8 @@ function appendButton(elementId, color) {
 }
 
 // when a new window is created, such as pressing ctrl-n or dragging a tab to the desktop,
-// change the color of the when if the "change color for new windows" checkbox is checked
-// if extension has not run before, create local storage key: change_new
+// change the color of the window if the "change color for new windows" checkbox is checked
+// also: if extension has not run before, create local storage key: change_new and set to true
 async function applyWindowTheme() {
     console.log("A new window was created:", window);
     x = browser.storage.local.get();
@@ -105,11 +106,14 @@ window.addEventListener("load", function () { // DOMContentLoaded
         // ignore b/c called from background scripts; not clicking on extension icon
     }
 
+    // popular the all_timed_colors array with a color + the current date/time
     all_colors.forEach((color) => all_timed_colors.push(new TimedColor(color)));
+
+    // build out the vertical list of HTML buttons
     all_colors.forEach((color) => appendButton("button_list", color));
 
-
     try {
+        // uncheck the checkbox in the HTML if the storage value for change_new is set to false
         console.log("is checked? ", document.getElementById("change_new").checked);
         x = browser.storage.local.get();
         x.then(obj => {
@@ -120,6 +124,7 @@ window.addEventListener("load", function () { // DOMContentLoaded
             }
         });
 
+        // button has either been checked or unchecked
         var change_new_selector = document.getElementById("change_new");
         change_new_selector.addEventListener('change', function () {
             if (this.checked) {
