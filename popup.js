@@ -2,6 +2,15 @@
 // -John Taylor
 // 2023-11-14
 
+/*
+This script is instantiated twice:
+1) in manifest.json, background -> scripts
+2) in popup.html, script tag
+
+Because of this, try/catch must be used in a few places to ignore exceptions
+because the caller is from background scripts; not by the user clicking on the extension icon (which is used by popup.html)
+*/
+
 console.log("In foxcolorbox popup.js");
 
 // https://htmlcolorcodes.com/color-names/
@@ -44,13 +53,14 @@ function appendButton(elementId, color) {
         document.getElementById(elementId).appendChild(b);
         document.getElementById(elementId).appendChild(document.createElement("br"));
     } catch (error) {
-        // ignore b/c called from background scripts; not clicking on extension icon
+        // ignore b/c called from background scripts; not by clicking on the extension icon
         return;
     }
 
     b.onclick = async function () {
         theme = { colors: { frame: color, tab_background_text: '#000' } };
         var i = 0;
+        // since the button list is small, just iterate over all objects instead of using a hash table
         for (const timed_color of all_timed_colors) {
             if (timed_color.color === color) {
                 let now = new Date();
@@ -103,10 +113,10 @@ window.addEventListener("load", function () { // DOMContentLoaded
             browser.theme.reset(current_window.id);
         });
     } catch (error) {
-        // ignore b/c called from background scripts; not clicking on extension icon
+        // ignore b/c called from background scripts; not by clicking on the extension icon
     }
 
-    // popular the all_timed_colors array with a color + the current date/time
+    // populate the all_timed_colors array with a color + the current date/time
     all_colors.forEach((color) => all_timed_colors.push(new TimedColor(color)));
 
     // build out the vertical list of HTML buttons
