@@ -76,14 +76,27 @@ function appendButton(elementId, color) {
 
         let current_window = await browser.windows.getLastFocused();
         browser.theme.update(current_window.id, theme);
+        // save the chosen colour to the window's session so it survives browser restart
+        browser.sessions.setWindowValue(current_window.id, "color", color);
     }
 }
 
 // when a new window is created, such as pressing ctrl-n or dragging a tab to the desktop,
 // change the color of the window if the "change color for new windows" checkbox is checked
 // also: if extension has not run before, create local storage key: change_new and set to true
-async function applyWindowTheme() {
-    console.log("A new window was created:", window);
+// if the window is being restored from a previous session, reapply its saved colour instead
+async function applyWindowTheme(new_window) {
+    console.log("A new window was created:", new_window.id);
+
+    // check if this window has a colour saved from a previous session (e.g. after browser restart)
+    const saved_color = await browser.sessions.getWindowValue(new_window.id, "color");
+    if (saved_color) {
+        console.log("Restoring saved session colour:", saved_color, "for window:", new_window.id);
+        browser.theme.update(new_window.id, { colors: { frame: saved_color, tab_background_text: '#000' } });
+        return;
+    }
+
+    // no saved colour - this is a brand new window, apply LRU colour if change_new is enabled
     x = browser.storage.local.get();
     x.then(async obj => {
         console.log("obj:", obj);
@@ -95,14 +108,16 @@ async function applyWindowTheme() {
             console.log("[storage save] setting change_new: true");
         }
         if (obj["change_new"] === true || has_cn_storage_key === true) {
-            let current_window = await browser.windows.getCurrent();
-            browser.theme.update(current_window.id, getOldestColorTheme());
+            const theme = getOldestColorTheme();
+            browser.theme.update(new_window.id, theme);
+            // save the auto-assigned colour to the session so it is restored on restart
+            browser.sessions.setWindowValue(new_window.id, "color", theme.colors.frame);
         }
     });
 }
 
 // fired when user clicks the extension's icon
-window.addEventListener("load", function () { // DOMContentLoaded
+window.addEventListener("load", async function () { // DOMContentLoaded
     let now = new Date();
     // console.log("starting on:", now.toISOString());
     // console.log("document.readyState: ", document.readyState);
@@ -111,6 +126,8 @@ window.addEventListener("load", function () { // DOMContentLoaded
         reset.addEventListener("click", async function () {
             let current_window = await browser.windows.getCurrent();
             browser.theme.reset(current_window.id);
+            // clear the saved session colour so default theme is restored on restart too
+            browser.sessions.removeWindowValue(current_window.id, "color");
         });
     } catch (error) {
         // ignore b/c called from background scripts; not by clicking on the extension icon
@@ -121,6 +138,17 @@ window.addEventListener("load", function () { // DOMContentLoaded
 
     // build out the vertical list of HTML buttons
     all_colors.forEach((color) => appendButton("button_list", color));
+
+    // scan all currently open windows and restore any saved session colours
+    // this catches session-restored windows that were created before the onCreated listener registered
+    const existing_windows = await browser.windows.getAll();
+    for (const win of existing_windows) {
+        const saved_color = await browser.sessions.getWindowValue(win.id, "color");
+        if (saved_color) {
+            console.log("Startup: restoring colour", saved_color, "for window", win.id);
+            browser.theme.update(win.id, { colors: { frame: saved_color, tab_background_text: '#000' } });
+        }
+    }
 
     try {
         // uncheck the checkbox in the HTML if the storage value for change_new is set to false

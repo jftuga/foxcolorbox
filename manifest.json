@@ -19,10 +19,16 @@
             "popup.js"
         ]
     },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "foxcolorbox@jftuga"
+        }
+    },
     "permissions": [
         "tabs",
         "theme",
         "activeTab",
-        "storage"
+        "storage",
+        "sessions"
     ]
 }
