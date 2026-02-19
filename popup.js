@@ -76,7 +76,7 @@ function appendButton(elementId, color) {
 
         let current_window = await browser.windows.getLastFocused();
         browser.theme.update(current_window.id, theme);
-        // save the chosen colour to the window's session so it survives browser restart
+        // save the chosen color to the window's session so it survives browser restart
         browser.sessions.setWindowValue(current_window.id, "color", color);
     }
 }
@@ -84,19 +84,19 @@ function appendButton(elementId, color) {
 // when a new window is created, such as pressing ctrl-n or dragging a tab to the desktop,
 // change the color of the window if the "change color for new windows" checkbox is checked
 // also: if extension has not run before, create local storage key: change_new and set to true
-// if the window is being restored from a previous session, reapply its saved colour instead
+// if the window is being restored from a previous session, reapply its saved color instead
 async function applyWindowTheme(new_window) {
     console.log("A new window was created:", new_window.id);
 
-    // check if this window has a colour saved from a previous session (e.g. after browser restart)
+    // check if this window has a color saved from a previous session (e.g. after browser restart)
     const saved_color = await browser.sessions.getWindowValue(new_window.id, "color");
     if (saved_color) {
-        console.log("Restoring saved session colour:", saved_color, "for window:", new_window.id);
+        console.log("Restoring saved session color:", saved_color, "for window:", new_window.id);
         browser.theme.update(new_window.id, { colors: { frame: saved_color, tab_background_text: '#000' } });
         return;
     }
 
-    // no saved colour - this is a brand new window, apply LRU colour if change_new is enabled
+    // no saved color - this is a brand new window, apply LRU color if change_new is enabled
     x = browser.storage.local.get();
     x.then(async obj => {
         console.log("obj:", obj);
@@ -110,7 +110,7 @@ async function applyWindowTheme(new_window) {
         if (obj["change_new"] === true || has_cn_storage_key === true) {
             const theme = getOldestColorTheme();
             browser.theme.update(new_window.id, theme);
-            // save the auto-assigned colour to the session so it is restored on restart
+            // save the auto-assigned color to the session so it is restored on restart
             browser.sessions.setWindowValue(new_window.id, "color", theme.colors.frame);
         }
     });
@@ -126,7 +126,7 @@ window.addEventListener("load", async function () { // DOMContentLoaded
         reset.addEventListener("click", async function () {
             let current_window = await browser.windows.getCurrent();
             browser.theme.reset(current_window.id);
-            // clear the saved session colour so default theme is restored on restart too
+            // clear the saved session color so default theme is restored on restart too
             browser.sessions.removeWindowValue(current_window.id, "color");
         });
     } catch (error) {
@@ -139,13 +139,13 @@ window.addEventListener("load", async function () { // DOMContentLoaded
     // build out the vertical list of HTML buttons
     all_colors.forEach((color) => appendButton("button_list", color));
 
-    // scan all currently open windows and restore any saved session colours
+    // scan all currently open windows and restore any saved session colors
     // this catches session-restored windows that were created before the onCreated listener registered
     const existing_windows = await browser.windows.getAll();
     for (const win of existing_windows) {
         const saved_color = await browser.sessions.getWindowValue(win.id, "color");
         if (saved_color) {
-            console.log("Startup: restoring colour", saved_color, "for window", win.id);
+            console.log("Startup: restoring color", saved_color, "for window", win.id);
             browser.theme.update(win.id, { colors: { frame: saved_color, tab_background_text: '#000' } });
         }
     }
