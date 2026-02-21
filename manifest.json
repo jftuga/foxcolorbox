@@ -21,7 +21,10 @@
     },
     "browser_specific_settings": {
         "gecko": {
-            "id": "foxcolorbox@jftuga"
+            "id": "{290f4621-ce11-49af-9194-bc7364298044}",
+            "data_collection_permissions": {
+                "required": ["none"]
+            }
         }
     },
     "permissions": [
